@@ -1,30 +1,44 @@
-from google.auth import default
-from googleapiclient.discovery import build
+from flask import Flask, jsonify, request
+from get import get_bdd_data
+from append import append_row_to_bdd
 
-# Authenticate using Application Default Credentials
-credentials, project = default()
+app = Flask(__name__)
 
-# Initialize the Sheets API client
-service = build("sheets", "v4", credentials=credentials)
+@app.route('/data', methods=['GET'])
+def data_route():
+    try:
+        data = get_bdd_data()
+        return jsonify({"success": True, "data": data})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
-# Your Spreadsheet ID (from the URL)
-spreadsheet_id = "15JHCWWX0OPu8BhbNdpsppDO3lDFqDvIEtdc2QCcO1y4"
 
-# The tab name and range you want to read from
-range_name = "BDD!A1:E20"  # Adjust range if needed
+@app.route('/data', methods=['POST'])
+def append_route():
+    try:
+        # Get JSON from client
+        json_data = request.get_json()
+        if not json_data:
+            return jsonify({"success": False, "error": "No JSON payload received"}), 400
 
-# Make the API call
-response = service.spreadsheets().values().get(
-    spreadsheetId=spreadsheet_id,
-    range=range_name
-).execute()
+        # Ordered row to match the sheet headers
+        headers = [
+            "Immatriculation",
+            "Date",
+            "Client",
+            "Modèle",
+            "lieu",
+            "prestataire",
+            "commentaire"
+        ]
 
-values = response.get("values", [])
+        row = [json_data.get(col, "") for col in headers]
 
-# Print the data
-if not values:
-    print("❌ No data found in BDD sheet.")
-else:
-    print("✅ Data from 'BDD' sheet:")
-    for row in values:
-        print(row)
+        result = append_row_to_bdd(row)
+        return jsonify({"success": True, "update": result})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
