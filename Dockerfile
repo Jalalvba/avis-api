@@ -1,4 +1,4 @@
-# Use an official Python base image
+# Use a minimal Python base image
 FROM python:3.11-slim
 
 # Set working directory
@@ -8,11 +8,11 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy all app files
+# Copy the rest of the app
 COPY . .
 
-# Expose Cloud Run default port
+# Required for Cloud Run to detect your service
 EXPOSE 8080
 
-# Run your app using Python (safer than flask run for Cloud Run)
+# Launch app on the expected port
 CMD ["python", "app.py"]

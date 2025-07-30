@@ -5,7 +5,7 @@ from googleapiclient.discovery import build
 SPREADSHEET_ID = '15JHCWWX0OPu8BhbNdpsppDO3lDFqDvIEtdc2QCcO1y4'
 RANGE_NAME = 'BDD'
 
-# Cloud Run will inject credentials automatically via its Service Account
+# Cloud Run injecte automatiquement les credentials du service account
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 credentials, _ = default(scopes=SCOPES)
 
