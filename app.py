@@ -1,9 +1,14 @@
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 from get import get_bdd_data
 from append import append_row_to_bdd
-from update import update_row_by_immat, normalize_immat  # imported normalize
+from update import update_row_by_immat, normalize_immat
+from delete import delete_row_by_immat  # ✅ L'import doit être en haut
+
+import os
 
 app = Flask(__name__)
+CORS(app)  # Autoriser toutes les origines CORS
 
 # GET all data
 @app.route('/data', methods=['GET'])
@@ -14,7 +19,6 @@ def data_route():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-
 # POST append row
 @app.route('/data', methods=['POST'])
 def append_route():
@@ -24,13 +28,8 @@ def append_route():
             return jsonify({"success": False, "error": "No JSON payload received"}), 400
 
         headers = [
-            "Immatriculation",
-            "Date",
-            "Client",
-            "Modèle",
-            "lieu",
-            "prestataire",
-            "commentaire"
+            "Immatriculation", "Date", "Client", "Modèle",
+            "lieu", "prestataire", "commentaire"
         ]
 
         row = [json_data.get(col, "") for col in headers]
@@ -40,8 +39,7 @@ def append_route():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-
-# PUT update row by normalized immatriculation
+# PUT update row
 @app.route('/data/<immat>', methods=['PUT'])
 def update_route(immat):
     try:
@@ -50,13 +48,8 @@ def update_route(immat):
             return jsonify({"success": False, "error": "No JSON payload"}), 400
 
         headers = [
-            "Immatriculation",
-            "Date",
-            "Client",
-            "Modèle",
-            "lieu",
-            "prestataire",
-            "commentaire"
+            "Immatriculation", "Date", "Client", "Modèle",
+            "lieu", "prestataire", "commentaire"
         ]
 
         new_row = [json_data.get(col, "") for col in headers]
@@ -66,6 +59,16 @@ def update_route(immat):
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
+# DELETE row by immat
+@app.route('/data/<immat>', methods=['DELETE'])
+def delete_route(immat):
+    try:
+        result = delete_row_by_immat(immat)
+        return jsonify({"success": True, "deleted": True, "details": result})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
+# Run
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port)
